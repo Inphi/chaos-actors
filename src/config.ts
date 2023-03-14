@@ -2,7 +2,7 @@ import { ethers } from 'ethers';
 import { predeploys } from '@eth-optimism/contracts-bedrock'
 import { DEFAULT_L2_CONTRACT_ADDRESSES, CrossChainMessenger, ETHBridgeAdapter, StandardBridgeAdapter } from '@eth-optimism/sdk';
 
-const getSigners = (): [ethers.Wallet, ethers.Wallet] => {
+export const getSigners = (): [ethers.Wallet, ethers.Wallet] => {
     if (process.env.PRIVATE_KEY === undefined) {
         throw new Error("missing PRIVATE_KEY env")
     }
