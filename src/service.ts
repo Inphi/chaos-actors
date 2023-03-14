@@ -19,7 +19,7 @@ type ActorServiceState = {
 class ActorService extends BaseServiceV2<ActorServiceOptions, {}, ActorServiceState> {
     constructor(options?: Partial<ActorServiceOptions>) {
         super({
-            name: 'chaos-deposit-actor',
+            name: 'chaos-actor',
             version: "0.0.1",
             loop: true,
             options: options,
