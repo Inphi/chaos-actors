@@ -99,7 +99,7 @@ if (require.main === module) {
     const options = {
         amount: process.env.AMOUNT || "0.001",
         recipient: process.env.SEND_RECIPIENT,
-        loopIntervalMs: 120_000,
+        loopIntervalMs: parseInt(process.env.LOOP_INTERVAL_MS) || 120_000,
     }
     const service = new ActorService(options)
     service.run()
