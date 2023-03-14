@@ -97,7 +97,7 @@ class ActorService extends BaseServiceV2<ActorServiceOptions, {}, ActorServiceSt
 
 if (require.main === module) {
     const options = {
-        amount: "0.001",
+        amount: process.env.AMOUNT || "0.001",
         recipient: process.env.SEND_RECIPIENT,
         loopIntervalMs: 120_000,
     }
