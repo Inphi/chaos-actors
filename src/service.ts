@@ -84,9 +84,15 @@ class ActorService extends BaseServiceV2<ActorServiceOptions, {}, ActorServiceSt
         const logger = this.logger.child({ component: 'send' })
         logger.info("Send ETH on L2")
 
+        // override estimated gas price on chaos net. It's an overestimate
+        const block = await this.state.wallet.provider.getBlock("latest")
+        const tip = 10
+        const price = block.baseFeePerGas.add(tip)
+
         const tx = {
             to: this.state.recipient,
             value: this.state.amount,
+            gasPrice: price,
         }
         const result = await this.state.wallet.sendTransaction(tx)
         const receipt = await result.wait()
