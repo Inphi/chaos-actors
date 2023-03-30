@@ -59,44 +59,52 @@ class ActorService extends BaseServiceV2<ActorServiceOptions, {}, ActorServiceSt
         const logger = this.logger.child({ component: 'deposit' })
         logger.info("Actor ETH")
 
-        const balance = await this.state.crossChainMessenger.l1Signer.getBalance()
-        const teneth = ethers.utils.parseEther("10.0")
-        if (balance.lt(teneth)) {
-            logger.warn(`L1 wallet is too low. Currently has ${balance} wei`)
-            return
+        try {
+            const balance = await this.state.crossChainMessenger.l1Signer.getBalance()
+            const teneth = ethers.utils.parseEther("10.0")
+            if (balance.lt(teneth)) {
+                logger.warn(`L1 wallet is too low. Currently has ${balance} wei`)
+                return
+            }
+
+            const start = new Date().getUTCSeconds()
+            const now = () => { return new Date().getUTCSeconds() }
+
+            const response = await this.state.crossChainMessenger.depositETH(this.state.amount)
+            logger.info(`Transaction hash(on L1): ${response.hash}`)
+            await response.wait()
+            logger.info("Waiting for status to change to RELAYED")
+            logger.info(`Time so far ${(now() - start) / 1000} seconds`)
+            await this.state.crossChainMessenger.waitForMessageStatus(response.hash,
+                MessageStatus.RELAYED)
+
+            logger.info(`depositETH took ${(now() - start) / 1000} seconds\n\n`)
+        } catch (e) {
+            logger.error(e)
         }
-
-        const start = new Date().getUTCSeconds()
-        const now = () => { return new Date().getUTCSeconds() }
-
-        const response = await this.state.crossChainMessenger.depositETH(this.state.amount)
-        logger.info(`Transaction hash(on L1): ${response.hash} `)
-        await response.wait()
-        logger.info("Waiting for status to change to RELAYED")
-        logger.info(`Time so far ${(now() - start) / 1000} seconds`)
-        await this.state.crossChainMessenger.waitForMessageStatus(response.hash,
-            MessageStatus.RELAYED)
-
-        logger.info(`depositETH took ${(now() - start) / 1000} seconds\n\n`)
     }
 
     async doSend(): Promise<void> {
         const logger = this.logger.child({ component: 'send' })
         logger.info("Send ETH on L2")
 
-        // override estimated gas price on chaos net. It's an overestimate
-        const block = await this.state.wallet.provider.getBlock("latest")
-        const tip = 10
-        const price = block.baseFeePerGas.add(tip)
+        try {
+            // override estimated gas price on chaos net. It's an overestimate
+            const block = await this.state.wallet.provider.getBlock("latest")
+            const tip = 10
+            const price = block.baseFeePerGas.add(tip)
 
-        const tx = {
-            to: this.state.recipient,
-            value: this.state.amount,
-            gasPrice: price,
+            const tx = {
+                to: this.state.recipient,
+                value: this.state.amount,
+                gasPrice: price,
+            }
+            const result = await this.state.wallet.sendTransaction(tx)
+            const receipt = await result.wait()
+            logger.info("Successfully sent ETH")
+        } catch(e) {
+            logger.error(e)
         }
-        const result = await this.state.wallet.sendTransaction(tx)
-        const receipt = await result.wait()
-        logger.info("Successfully sent ETH")
     }
 }
 
