@@ -67,18 +67,17 @@ class ActorService extends BaseServiceV2<ActorServiceOptions, {}, ActorServiceSt
                 return
             }
 
-            const start = new Date().getUTCSeconds()
-            const now = () => { return new Date().getUTCSeconds() }
+            const start = Date.now()
 
             const response = await this.state.crossChainMessenger.depositETH(this.state.amount)
             logger.info(`Transaction hash(on L1): ${response.hash}`)
             await response.wait()
             logger.info("Waiting for status to change to RELAYED")
-            logger.info(`Time so far ${(now() - start) / 1000} seconds`)
+            logger.info(`Time so far ${(Date.now() - start) / 1000} seconds`)
             await this.state.crossChainMessenger.waitForMessageStatus(response.hash,
                 MessageStatus.RELAYED)
 
-            logger.info(`depositETH took ${(now() - start) / 1000} seconds\n\n`)
+            logger.info(`depositETH took ${(Date.now() - start) / 1000} seconds`)
         } catch (e) {
             logger.error(e)
         }
