@@ -1,6 +1,7 @@
 import { ethers } from 'ethers';
 import { predeploys } from '@eth-optimism/contracts-bedrock'
-import { DEFAULT_L2_CONTRACT_ADDRESSES, CrossChainMessenger, ETHBridgeAdapter, StandardBridgeAdapter } from '@eth-optimism/sdk';
+import { CONTRACT_ADDRESSES, DEFAULT_L2_CONTRACT_ADDRESSES, CrossChainMessenger, ETHBridgeAdapter, StandardBridgeAdapter, L2ChainID } from '@eth-optimism/sdk';
+import fs from 'fs';
 
 export const getSigners = (): [ethers.Wallet, ethers.Wallet] => {
     if (process.env.PRIVATE_KEY === undefined) {
@@ -24,25 +25,21 @@ export const getSigners = (): [ethers.Wallet, ethers.Wallet] => {
 }
 
 const getContractAddresses = () => {
-    const L1_STANDARD_BRIDGE = "0x60859421Ed85C0B11071230cf61dcEeEf54630Ff"
+    const config = process.env.SDK_ADDRESSES
+    if (config === undefined) {
+        throw new Error("missing SDK_ADDRESSES env")
+    }
+    const data = fs.readFileSync(config, 'utf-8')
+    const sdk_addresses = JSON.parse(data)
     return {
-        l1: {
-            AddressManager: "0x41E2A82Ddf1311D74c898Bb825c8D0eafaea2432",
-            L1CrossDomainMessenger: "0xfc428D28D197fFf99A5EbAc6be8B761FEd8718Da",
-            L1StandardBridge: L1_STANDARD_BRIDGE,
-            StateCommitmentChain: ethers.constants.AddressZero,
-            CanonicalTransactionChain: ethers.constants.AddressZero,
-            BondManager: ethers.constants.AddressZero,
-            OptimismPortal: "0x83ed70E86524C3b71Df475E9BC3d7B13740F2561",
-            L2OutputOracle: "0x9DDB48E3A272E784D887F3A45B261e65E9A0baeC",
-        },
+        l1: sdk_addresses,
         l2: DEFAULT_L2_CONTRACT_ADDRESSES,
     }
 }
 
 export const getCrossChainMessenger = (): CrossChainMessenger => {
-    const L1_STANDARD_BRIDGE = "0x60859421Ed85C0B11071230cf61dcEeEf54630Ff"
     const contractAddrs = getContractAddresses()
+    const L1_STANDARD_BRIDGE = contractAddrs.l1.L1StandardBridge
     const [l1Signer, l2Signer] = getSigners()
     return new CrossChainMessenger({
         l1ChainId: 5,

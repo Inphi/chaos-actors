@@ -7,6 +7,7 @@ type ActorServiceOptions = {
     amount: string
     recipient: string
     loopIntervalMs: number
+    port: number
 }
 
 type ActorServiceState = {
@@ -35,7 +36,11 @@ class ActorService extends BaseServiceV2<ActorServiceOptions, {}, ActorServiceSt
                 loopIntervalMs: {
                     validator: validators.num,
                     desc: "Loop interval in milliseconds",
-                }
+                },
+                port: {
+                    validator: validators.num,
+                    desc: "metrics listening port",
+                },
             },
             metricsSpec: {},
         })
@@ -101,7 +106,7 @@ class ActorService extends BaseServiceV2<ActorServiceOptions, {}, ActorServiceSt
             const result = await this.state.wallet.sendTransaction(tx)
             const receipt = await result.wait()
             logger.info("Successfully sent ETH")
-        } catch(e) {
+        } catch (e) {
             logger.error(e)
         }
     }
@@ -113,6 +118,7 @@ if (require.main === module) {
         amount: process.env.AMOUNT || "0.001",
         recipient: process.env.SEND_RECIPIENT,
         loopIntervalMs: parseInt(process.env.LOOP_INTERVAL_MS) || 120_000,
+        port: parseInt(process.env.PORT) || 7300,
     }
     const service = new ActorService(options)
     service.run()
